@@ -90,8 +90,11 @@ body{margin:0;background:var(--paper-2);font-family:Outfit,system-ui,sans-serif;
 .filter-select:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 .filter-clear{height:36px;padding:0 6px;border:0;background:none;color:var(--muted-65);font:400 12px Outfit,sans-serif;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
 @media (pointer:coarse){.filter-select{font-size:16px}}
-.list-scroll{display:flex;flex-direction:column;gap:10px;max-height:min(560px,70vh);overflow-y:auto;overscroll-behavior:contain;margin-right:-10px;padding-right:10px;
-  -webkit-mask-image:linear-gradient(to bottom,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(to bottom,#000 calc(100% - 28px),transparent);padding-bottom:24px}
+.list-scroll{position:relative;display:flex;flex-direction:column;gap:10px;overflow-y:auto;overscroll-behavior:contain;margin-right:-10px;padding-right:10px}
+.list-item{border-top:1px solid rgba(20,18,16,.1);padding-top:12px;display:flex;flex-direction:column;gap:7px;flex:none}
+.resumo{font:400 13px/1.5 Outfit,sans-serif;color:var(--muted-70);white-space:pre-wrap;overflow-wrap:anywhere}
+.resumo.clamp{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.read-more{align-self:flex-start;border:0;background:none;padding:0;margin-top:-3px;font:400 11px Outfit,sans-serif;color:var(--ink);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
 .list-scroll::-webkit-scrollbar{width:6px}
 .list-scroll::-webkit-scrollbar-thumb{background:rgba(20,18,16,.18);border-radius:999px}
 .list-end{font:400 10px Outfit,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--muted-45);text-align:center;padding:6px 0 2px}
@@ -649,19 +652,48 @@ body{margin:0;background:var(--paper-2);font-family:Outfit,system-ui,sans-serif;
       return '<span style="font:400 10px Outfit,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#141210;background:rgba(20,18,16,.07);border-radius:999px;padding:4px 9px">'+esc(tp)+'</span>';
     }).join('');
     var item = document.createElement('div');
-    item.style.borderTop='1px solid rgba(20,18,16,.1)'; item.style.paddingTop='12px';
-    item.style.display='flex'; item.style.flexDirection='column'; item.style.gap='7px';
+    item.className = 'list-item';
     item.innerHTML = '<div style="display:flex;align-items:center;gap:10px"><span style="width:8px;height:8px;flex:none;border-radius:50%;background:'+teamColor(r.time)+'"></span><span style="flex:1;font:400 14px Outfit,sans-serif;color:#141210">'+esc(r.nome)+'</span><span style="font:400 10px Outfit,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--muted-45)">'+fmtShortDate(r.dia)+' · '+esc(r.time)+'</span></div>' +
-      (r.resumo ? '<div style="font:400 13px/1.5 Outfit,sans-serif;color:var(--muted-70);white-space:pre-wrap;overflow-wrap:anywhere">'+esc(r.resumo)+'</div>' : '') +
+      (r.resumo ? '<div class="resumo clamp">'+esc(r.resumo)+'</div>' : '') +
       (chips ? '<div style="display:flex;flex-wrap:wrap;gap:6px">'+chips+'</div>' : '');
     return item;
   }
+
+  // resumo longo fica em 2 linhas, com "ler mais" para abrir o texto inteiro
+  function addReadMore(item){
+    var res = item.querySelector('.resumo');
+    if (!res || res.scrollHeight <= res.clientHeight + 1) return;
+    var btn = document.createElement('button');
+    btn.type = 'button'; btn.className = 'read-more'; btn.textContent = 'ler mais';
+    btn.addEventListener('click', function(){
+      var aberto = res.classList.toggle('clamp') === false;
+      btn.textContent = aberto ? 'ler menos' : 'ler mais';
+    });
+    res.insertAdjacentElement('afterend', btn);
+  }
+
+  // altura fixa: cabem 3 testemunhos, e uma pontinha do 4º indica que dá pra rolar
+  function fitListHeight(){
+    var wrap = document.getElementById('listItems');
+    var items = wrap.querySelectorAll('.list-item');
+    if (items.length > 3){
+      wrap.style.height = (items[3].offsetTop - items[0].offsetTop + 26) + 'px';
+    } else {
+      wrap.style.height = '';
+    }
+  }
+  window.addEventListener('resize', function(){ if (!dashView.hidden) fitListHeight(); });
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(function(){ if (!dashView.hidden) fitListHeight(); });
 
   function appendBatch(){
     var wrap = document.getElementById('listItems');
     var old = document.getElementById('listSentinel'); if (old) old.remove();
     var next = listSorted.slice(listShown, listShown + LIST_BATCH);
-    next.forEach(function(r){ wrap.appendChild(listItemEl(r)); });
+    next.forEach(function(r){
+      var el = listItemEl(r);
+      wrap.appendChild(el);
+      addReadMore(el);
+    });
     listShown += next.length;
     if (listShown < listSorted.length){
       var sentinel = document.createElement('div');
@@ -695,6 +727,7 @@ body{margin:0;background:var(--paper-2);font-family:Outfit,system-ui,sans-serif;
       return;
     }
     appendBatch();
+    fitListHeight();
   }
 
   function renderAll(){ renderStats(); renderTeamBars(); renderCrossBars(); renderChart(); renderList(); }
