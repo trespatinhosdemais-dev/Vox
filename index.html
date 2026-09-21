@@ -257,9 +257,17 @@ body{margin:0;background:var(--paper-2);font-family:Outfit,system-ui,sans-serif;
   var API_URL = 'https://script.google.com/macros/s/AKfycbwBB_zGOdOQwGboCZB4W7UygDckHDwqeRJz70-Oo28Z3EZyvI6jBepV11REf2temGP9/exec';
 
   function apiReady(){ return /^https:\/\/script\.google\.com\/.+\/exec$/.test(API_URL); }
-  function api(payload){
-    // sem cabeçalhos = text/plain, o que evita o preflight de CORS (o Apps Script não responde a ele)
-    return fetch(API_URL, { method:'POST', body: JSON.stringify(payload), redirect:'follow' })
+  // envio: POST "no-cors". o Apps Script grava e o navegador não precisa ler a resposta
+  // (a resposta do POST passa por um redirecionamento que alguns navegadores quebram).
+  // se a rede falhar, o fetch ainda dá erro e o formulário avisa.
+  function apiEnviar(payload){
+    return fetch(API_URL, { method:'POST', mode:'no-cors', body: JSON.stringify(payload) })
+      .then(function(){ return { ok: true }; });
+  }
+  // leitura: GET simples, o mesmo caminho de abrir o link no navegador
+  function apiListar(senha){
+    var url = API_URL + '?action=listar&senha=' + encodeURIComponent(senha) + '&t=' + Date.now();
+    return fetch(url, { method:'GET', redirect:'follow', cache:'no-store' })
       .then(function(res){ if (!res.ok) throw new Error('http ' + res.status); return res.json(); });
   }
   function esc(v){
@@ -356,7 +364,7 @@ body{margin:0;background:var(--paper-2);font-family:Outfit,system-ui,sans-serif;
       return;
     }
     submitBtn.disabled = true; submitBtn.textContent = 'enviando...';
-    api({
+    apiEnviar({
       action: 'enviar',
       nome: nome,
       dia: dia,
@@ -593,7 +601,7 @@ body{margin:0;background:var(--paper-2);font-family:Outfit,system-ui,sans-serif;
     if (!pw){ gateError.textContent = 'digite a senha do time.'; gateError.hidden = false; return; }
     if (!apiReady()){ gateError.textContent = 'o painel ainda não está conectado à planilha.'; gateError.hidden = false; return; }
     gateBtn.disabled = true; gateBtn.textContent = 'entrando...';
-    api({ action: 'listar', senha: pw }).then(function(res){
+    apiListar(pw).then(function(res){
       if (!res || !res.ok){
         gateError.textContent = (res && res.erro === 'senha') ? 'senha inválida.' : 'não foi possível carregar o painel (' + ((res && res.erro) || 'erro') + ').';
         gateError.hidden = false;
