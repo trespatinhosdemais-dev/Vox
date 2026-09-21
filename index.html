@@ -1,0 +1,616 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Ministério Vox</title><meta name="theme-color" content="#e9e5dc"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@1,700;1,800;1,900&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  color-scheme:light;
+  --ink:#141210; --paper:#F4F1EA; --paper-2:#e9e5dc;
+  --orange:#F26A1F; --orange-hover:#ff7a2d; --red:#E23B2E; --lime:#C8D92B; --blue:#1B4FD8; --green:#1F6B4A;
+  --muted-70:rgba(20,18,16,.7); --muted-65:rgba(20,18,16,.65); --muted-55:rgba(20,18,16,.55);
+  --muted-45:rgba(20,18,16,.45); --muted-35:rgba(20,18,16,.35);
+  --border:rgba(20,18,16,.12); --border-strong:rgba(20,18,16,.14); --glass:rgba(255,255,255,.62);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper-2);font-family:Outfit,system-ui,sans-serif;color:var(--ink)}
+.wrap{min-height:100%;display:flex;flex-direction:column;align-items:center;gap:18px;padding:24px 16px 56px}
+
+.tabs{display:flex;gap:6px;background:rgba(20,18,16,.06);padding:4px;border-radius:999px}
+.tab{border:none;background:none;font:500 12px Outfit,sans-serif;letter-spacing:.04em;color:var(--muted-65);padding:9px 18px;border-radius:999px;cursor:pointer;transition:background .15s,color .15s}
+.tab.on{background:var(--ink);color:var(--paper)}
+
+.preview-note{font:400 10px/1 Outfit,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--muted-45);text-align:center}
+.preview-note b{color:var(--orange)}
+
+.noise{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23n)' opacity='0.35'/%3E%3C/svg%3E"),
+    radial-gradient(120% 80% at 30% 10%, #ffffff 0%, #e8e3d8 75%);
+  background-blend-mode:multiply,normal;
+}
+.noise--panel{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23n)' opacity='0.35'/%3E%3C/svg%3E"),
+    radial-gradient(110% 70% at 70% 0%, #ffffff 0%, #e6e1d6 75%);
+  background-blend-mode:multiply,normal;
+}
+
+.eyebrow{font:400 10px/1 Outfit,sans-serif;letter-spacing:.34em;text-transform:uppercase;color:var(--orange)}
+.wordmark{font-family:'Playfair Display',serif;font-style:italic;font-weight:900;color:var(--ink);letter-spacing:-.02em;line-height:.86}
+.subline{font:400 11px/1 Outfit,sans-serif;letter-spacing:.2em;text-transform:uppercase;color:var(--muted-55)}
+.glass-card{background:var(--glass);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:1px solid var(--border);border-radius:28px}
+
+.field{display:flex;flex-direction:column;gap:8px}
+.field-label{font:400 11px/1 Outfit,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--orange)}
+.text-input,.date-input,.textarea{box-sizing:border-box;border-radius:14px;border:1px solid var(--border-strong);background:rgba(255,255,255,.75);color:var(--ink);font:400 16px Outfit,sans-serif;outline:none;width:100%;color-scheme:light}
+.text-input,.date-input{height:48px;padding:0 16px}
+.date-input{-webkit-appearance:none;appearance:none}
+.textarea{padding:14px 16px;border-radius:18px;font:400 16px/1.5 Outfit,sans-serif;resize:vertical}
+.text-input:focus,.date-input:focus,.textarea:focus{border-color:var(--orange)}
+
+.team-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.team-tile{min-height:48px;display:flex;align-items:center;gap:10px;padding:0 14px;border-radius:16px;cursor:pointer;background:rgba(255,255,255,.7);border:1px solid var(--border-strong);transition:background .15s,border-color .15s}
+.team-tile .mark{width:10px;height:10px;border-radius:3px;flex:none}
+.team-tile .label{font:400 14px Outfit,sans-serif}
+
+.type-row{display:flex;flex-wrap:wrap;gap:8px}
+.type-chip{height:38px;display:flex;align-items:center;padding:0 16px;border-radius:999px;cursor:pointer;font:400 13px Outfit,sans-serif;background:rgba(255,255,255,.7);border:1px solid var(--border-strong);color:var(--ink);transition:background .15s,border-color .15s}
+.type-chip.on{background:var(--orange);border-color:var(--orange)}
+
+.submit-btn{height:52px;border:none;border-radius:16px;background:var(--orange);color:var(--ink);font:500 16px Outfit,sans-serif;letter-spacing:.02em;cursor:pointer;width:100%}
+.submit-btn:hover{background:var(--orange-hover)}
+.submit-btn:disabled{opacity:.6;cursor:default}
+.error-text{font:400 12px/1.4 Outfit,sans-serif;color:var(--red)}
+[hidden]{display:none!important}
+
+.stat-tile{border-radius:28px;padding:18px 16px;display:flex;flex-direction:column;gap:6px;position:relative;overflow:hidden}
+.stat-tile .value{font:500 32px/1 Outfit,sans-serif}
+.stat-tile .label{font:400 12px/1 Outfit,sans-serif}
+.stat-tile .meta{font:400 10px/1 Outfit,sans-serif;letter-spacing:.14em;text-transform:uppercase;margin-top:4px}
+
+.bar-track{height:12px;border-radius:999px;background:rgba(20,18,16,.08);overflow:hidden;display:flex}
+.chip-btn{height:28px;display:flex;align-items:center;padding:0 12px;border-radius:999px;cursor:pointer;font:400 12px Outfit,sans-serif;white-space:nowrap;background:rgba(255,255,255,.7);border:1px solid var(--border-strong);color:var(--muted-70)}
+.pw-input{height:48px;padding:0 16px;border-radius:14px;border:1px solid var(--border-strong);background:rgba(255,255,255,.75);color:var(--ink);font:400 15px Outfit,sans-serif;outline:none;width:100%}
+
+.sheet{width:100%;border-radius:28px;overflow:hidden}
+.form-sheet{max-width:430px}
+.panel-sheet{max-width:1120px}
+
+.dash-row{display:grid;gap:16px}
+@media (min-width:720px){
+  .dash-row--2{grid-template-columns:1fr 1fr}
+  .dash-row--split{grid-template-columns:1.5fr 1fr}
+}
+.stat-row{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+@media (min-width:620px) and (max-width:899px){.stat-row{grid-template-columns:repeat(3,1fr)}}
+@media (min-width:900px){.stat-row{grid-template-columns:repeat(6,1fr)}}
+</style>
+
+<div class="wrap">
+  <div class="tabs">
+    <button class="tab on" id="tabForm" type="button">formulário</button>
+    <button class="tab" id="tabPanel" type="button">painel do time</button>
+  </div>
+  <div class="preview-note" id="previewNote" hidden></div>
+
+  <!-- SCREEN 1: form -->
+  <div id="screenForm" class="sheet form-sheet noise">
+    <div style="background:rgba(244,241,234,.62);padding:26px 20px 30px;display:flex;flex-direction:column;gap:22px">
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div class="eyebrow">ministério</div>
+        <div style="display:flex;align-items:flex-end;gap:8px">
+          <div class="wordmark" style="font-size:64px">Vox</div>
+          <div style="font:400 11px Outfit,sans-serif;letter-spacing:.04em;color:var(--muted-55);padding-bottom:6px">João 14:12</div>
+        </div>
+        <div class="subline" style="margin-top:4px">zion church · testemunhos do alcance</div>
+      </div>
+
+      <form id="formView" class="glass-card" novalidate style="position:relative;padding:22px 18px;display:flex;flex-direction:column;gap:20px">
+        <div class="field">
+          <label class="field-label" for="nome">seu nome</label>
+          <input id="nome" type="text" class="text-input" placeholder="nome e sobrenome" maxlength="120" autocomplete="name" required>
+        </div>
+        <div class="field">
+          <label class="field-label" for="dia">dia</label>
+          <input id="dia" type="date" class="date-input" required>
+        </div>
+        <div class="field">
+          <label class="field-label">time do alcance</label>
+          <div class="team-grid" id="teamGrid"></div>
+        </div>
+        <div class="field">
+          <label class="field-label">o que aconteceu</label>
+          <div class="type-row" id="typeRow"></div>
+        </div>
+        <div class="field">
+          <label class="field-label" for="resumo">resumo do testemunho</label>
+          <textarea id="resumo" class="textarea" rows="5" maxlength="3000" placeholder="conte em poucas linhas o que aconteceu"></textarea>
+        </div>
+        <input id="site" type="text" name="site" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
+        <div id="formError" class="error-text" hidden></div>
+        <button id="submitBtn" type="submit" class="submit-btn">enviar testemunho</button>
+      </form>
+
+      <div id="confirmView" class="glass-card" style="padding:32px 22px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:16px" hidden>
+        <div style="position:relative;overflow:hidden;width:64px;height:64px;border-radius:20px;background:var(--orange);display:flex;align-items:center;justify-content:center">
+          <div style="position:absolute;right:-14px;top:-14px;width:48px;height:24px;border-radius:0 0 48px 48px;background:rgba(20,18,16,.22)"></div>
+          <svg width="28" height="28" viewBox="0 0 28 28" style="position:relative">
+            <path d="M6 14.5 L11.5 20 L22 8" fill="none" stroke="#141210" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div style="font:500 20px Outfit,sans-serif">testemunho enviado</div>
+        <div style="font:400 14px/1.5 Outfit,sans-serif;color:var(--muted-65)">obrigado por compartilhar o que Deus fez no alcance. seu relato foi registrado.</div>
+        <button id="resetBtn" type="button" class="submit-btn" style="margin-top:6px">enviar outro testemunho</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN 2: panel -->
+  <div id="screenPanel" hidden style="width:100%;display:flex;justify-content:center">
+    <div id="gateView" class="glass-card noise" style="width:100%;max-width:360px;padding:28px 24px;display:flex;flex-direction:column;gap:18px">
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div class="eyebrow">ministério</div>
+        <div style="display:flex;align-items:flex-end;gap:7px">
+          <div class="wordmark" style="font-size:48px">Vox</div>
+          <div style="font:400 10px Outfit,sans-serif;letter-spacing:.04em;color:var(--muted-55);padding-bottom:5px">João 14:12</div>
+        </div>
+        <div class="subline" style="margin-top:4px">zion church · painel do time</div>
+      </div>
+      <form id="gateForm" style="display:flex;flex-direction:column;gap:12px">
+        <div class="field">
+          <label class="field-label" for="pw">senha do time</label>
+          <input id="pw" type="password" class="pw-input" placeholder="digite a senha" autocomplete="current-password">
+        </div>
+        <div id="gateError" class="error-text" hidden>senha inválida.</div>
+        <button id="gateBtn" type="submit" class="submit-btn">entrar</button>
+      </form>
+    </div>
+
+    <div id="dashView" class="sheet panel-sheet noise noise--panel" hidden>
+      <div style="background:rgba(244,241,234,.6);padding:24px 20px 38px;display:flex;flex-direction:column;gap:26px">
+        <div style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:24px">
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <div class="eyebrow">ministério</div>
+            <div style="display:flex;align-items:flex-end;gap:7px">
+              <div class="wordmark" style="font-size:56px">Vox</div>
+              <div style="font:400 10px Outfit,sans-serif;letter-spacing:.04em;color:var(--muted-55);padding-bottom:5px">João 14:12</div>
+            </div>
+            <div class="subline" style="margin-top:4px">zion church · painel do time</div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <div style="height:36px;display:flex;align-items:center;padding:0 16px;border-radius:12px;background:rgba(255,255,255,.7);border:1px solid var(--border);font:400 12px Outfit,sans-serif">últimos 8 meses</div>
+            <div style="height:36px;display:flex;align-items:center;padding:0 16px;border-radius:12px;background:rgba(255,255,255,.7);border:1px solid var(--border);font:400 12px Outfit,sans-serif">todos os times</div>
+          </div>
+        </div>
+
+        <div id="statRow" class="stat-row"></div>
+
+        <div class="dash-row dash-row--2">
+          <div class="glass-card" style="padding:22px 22px 24px;display:flex;flex-direction:column;gap:18px">
+            <div style="display:flex;flex-direction:column;gap:4px">
+              <div style="font:500 16px/1 Outfit,sans-serif">testemunhos por time</div>
+              <div style="font:400 10px/1 Outfit,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--muted-45)">total no período</div>
+            </div>
+            <div id="teamBars" style="display:flex;flex-direction:column;gap:14px"></div>
+          </div>
+
+          <div class="glass-card" style="padding:22px 22px 24px;display:flex;flex-direction:column;gap:18px">
+            <div style="display:flex;flex-direction:column;gap:4px">
+              <div style="font:500 16px/1 Outfit,sans-serif">time × tipo de testemunho</div>
+              <div style="font:400 10px/1 Outfit,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--muted-45)">distribuição</div>
+            </div>
+            <div id="crossBars" style="display:flex;flex-direction:column;gap:14px"></div>
+            <div style="display:flex;flex-wrap:wrap;gap:14px;margin-top:2px">
+              <div style="display:flex;align-items:center;gap:6px;font:400 10px Outfit,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--muted-65)"><span style="width:8px;height:8px;border-radius:2px;background:var(--orange)"></span>alcançada</div>
+              <div style="display:flex;align-items:center;gap:6px;font:400 10px Outfit,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--muted-65)"><span style="width:8px;height:8px;border-radius:2px;background:var(--red)"></span>salvação</div>
+              <div style="display:flex;align-items:center;gap:6px;font:400 10px Outfit,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--muted-65)"><span style="width:8px;height:8px;border-radius:2px;background:var(--lime)"></span>reconciliação</div>
+              <div style="display:flex;align-items:center;gap:6px;font:400 10px Outfit,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--muted-65)"><span style="width:8px;height:8px;border-radius:2px;background:var(--blue)"></span>cura</div>
+              <div style="display:flex;align-items:center;gap:6px;font:400 10px Outfit,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--muted-65)"><span style="width:8px;height:8px;border-radius:2px;background:var(--green)"></span>outro</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="dash-row dash-row--split">
+          <div class="glass-card" style="padding:22px 22px 20px;display:flex;flex-direction:column;gap:16px">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap">
+              <div style="display:flex;flex-direction:column;gap:4px">
+                <div style="font:500 16px/1 Outfit,sans-serif">evolução mês a mês</div>
+                <div id="serieMeta" style="font:400 10px/1 Outfit,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--muted-45)"></div>
+              </div>
+              <div style="display:flex;align-items:baseline;gap:6px">
+                <span id="serieLast" style="font:500 24px/1 Outfit,sans-serif"></span>
+                <span id="serieLastLabel" style="font:400 10px Outfit,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--muted-45)"></span>
+              </div>
+            </div>
+            <div id="serieChips" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+            <div style="position:relative;flex:1;min-height:172px;display:flex">
+              <svg viewBox="0 0 620 172" preserveAspectRatio="none" style="display:block;width:100%;height:100%">
+                <line x1="10" y1="152" x2="610" y2="152" stroke="rgba(20,18,16,.18)" stroke-width="1" vector-effect="non-scaling-stroke"></line>
+                <line x1="10" y1="84" x2="610" y2="84" stroke="rgba(20,18,16,.09)" stroke-width="1" vector-effect="non-scaling-stroke"></line>
+                <line x1="10" y1="16" x2="610" y2="16" stroke="rgba(20,18,16,.09)" stroke-width="1" vector-effect="non-scaling-stroke"></line>
+                <polyline id="chartLine" points="" fill="none" stroke="#F26A1F" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"></polyline>
+                <circle id="chartDot" cx="0" cy="0" r="4" fill="#F26A1F" vector-effect="non-scaling-stroke"></circle>
+              </svg>
+              <div id="serieMax" style="position:absolute;top:-6px;left:0;font:400 10px Outfit,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--muted-45)"></div>
+            </div>
+            <div id="chartMonths" style="display:flex;justify-content:space-between;font:400 10px Outfit,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--muted-45)"></div>
+          </div>
+
+          <div class="glass-card" style="padding:22px 22px 14px;display:flex;flex-direction:column;gap:14px">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
+              <div style="display:flex;flex-direction:column;gap:4px">
+                <div style="font:500 16px/1 Outfit,sans-serif">testemunhos completos</div>
+                <div id="listCount" style="font:400 10px/1 Outfit,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--muted-45)"></div>
+              </div>
+              <div id="listToggle" style="height:32px;display:flex;align-items:center;padding:0 14px;border-radius:10px;background:var(--orange);color:var(--ink);font:400 12px Outfit,sans-serif;cursor:pointer">ver todos</div>
+            </div>
+            <div id="listItems" style="display:flex;flex-direction:column;gap:10px"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  // ---------- configuração ----------
+  // cole aqui a URL do App da Web do Google Apps Script (termina em /exec)
+  var API_URL = 'https://script.google.com/macros/s/AKfycbw8OZlU2BpWL1xgl_j56hIDNnkWBo9lDEYHtIX-XqGu9Pa9dqMMKtF0uCKUnMFuBrJJ/exec';
+
+  function apiReady(){ return /^https:\/\/script\.google\.com\/.+\/exec$/.test(API_URL); }
+  function api(payload){
+    // sem cabeçalhos = text/plain, o que evita o preflight de CORS (o Apps Script não responde a ele)
+    return fetch(API_URL, { method:'POST', body: JSON.stringify(payload), redirect:'follow' })
+      .then(function(res){ if (!res.ok) throw new Error('http ' + res.status); return res.json(); });
+  }
+  function esc(v){
+    return String(v == null ? '' : v).replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+
+  // ---------- tabs ----------
+  var tabForm = document.getElementById('tabForm');
+  var tabPanel = document.getElementById('tabPanel');
+  var screenForm = document.getElementById('screenForm');
+  var screenPanel = document.getElementById('screenPanel');
+  var note = document.getElementById('previewNote');
+  if (!apiReady()){
+    note.innerHTML = 'configuração pendente: cole a URL do Apps Script em <b>API_URL</b> no index.html';
+    note.hidden = false;
+  }
+  tabForm.addEventListener('click', function(){
+    tabForm.classList.add('on'); tabPanel.classList.remove('on');
+    screenForm.hidden = false; screenPanel.hidden = true;
+  });
+  tabPanel.addEventListener('click', function(){
+    tabPanel.classList.add('on'); tabForm.classList.remove('on');
+    screenForm.hidden = true; screenPanel.hidden = false;
+  });
+
+  // ---------- screen 1: form ----------
+  var TEAMS = [
+    ['evangelismo', '#1B4FD8', '#F4F1EA'],
+    ['ações sociais', '#C8D92B', '#141210'],
+    ['fundação casa', '#1F6B4A', '#F4F1EA'],
+    ['esportes', '#F26A1F', '#141210']
+  ];
+  var TYPES = ['pessoa alcançada', 'salvação', 'reconciliação', 'cura', 'outro'];
+  var fstate = { team: null, types: [] };
+
+  var teamGrid = document.getElementById('teamGrid');
+  var typeRow = document.getElementById('typeRow');
+  var formView = document.getElementById('formView');
+  var confirmView = document.getElementById('confirmView');
+  var formError = document.getElementById('formError');
+  var submitBtn = document.getElementById('submitBtn');
+
+  function renderTeams(){
+    teamGrid.innerHTML = '';
+    TEAMS.forEach(function(t){
+      var name=t[0], color=t[1], ink=t[2];
+      var on = fstate.team === name;
+      var tile = document.createElement('div');
+      tile.className = 'team-tile';
+      tile.style.background = on ? color : '';
+      tile.style.borderColor = on ? color : '';
+      tile.innerHTML = '<div class="mark" style="background:' + (on?ink:color) + '"></div><div class="label" style="color:' + (on?ink:'#141210') + '">' + name + '</div>';
+      tile.addEventListener('click', function(){ fstate.team = name; renderTeams(); });
+      teamGrid.appendChild(tile);
+    });
+  }
+  function renderTypes(){
+    typeRow.innerHTML = '';
+    TYPES.forEach(function(name){
+      var on = fstate.types.indexOf(name) >= 0;
+      var chip = document.createElement('div');
+      chip.className = 'type-chip' + (on ? ' on' : '');
+      chip.textContent = name;
+      chip.addEventListener('click', function(){
+        fstate.types = on ? fstate.types.filter(function(t){return t!==name;}) : fstate.types.concat(name);
+        renderTypes();
+      });
+      typeRow.appendChild(chip);
+    });
+  }
+  renderTeams(); renderTypes();
+  if (location.hash === '#painel') tabPanel.click();
+
+  formView.addEventListener('submit', function(ev){
+    ev.preventDefault();
+    formError.hidden = true;
+    var nome = document.getElementById('nome').value.trim();
+    var dia = document.getElementById('dia').value;
+    if (!nome || !dia || !fstate.team){
+      formError.textContent = 'preencha nome, dia e o time do alcance.';
+      formError.hidden = false;
+      return;
+    }
+    if (!fstate.types.length){
+      formError.textContent = 'marque pelo menos uma opção em "o que aconteceu".';
+      formError.hidden = false;
+      return;
+    }
+    if (!apiReady()){
+      formError.textContent = 'o formulário ainda não está conectado à planilha. avise a liderança.';
+      formError.hidden = false;
+      return;
+    }
+    submitBtn.disabled = true; submitBtn.textContent = 'enviando...';
+    api({
+      action: 'enviar',
+      nome: nome,
+      dia: dia,
+      time: fstate.team,
+      tipos: fstate.types,
+      resumo: document.getElementById('resumo').value.trim(),
+      site: document.getElementById('site').value
+    }).then(function(res){
+      if (!res || !res.ok) throw new Error((res && res.erro) || 'falha no envio');
+      formView.hidden = true; confirmView.hidden = false;
+      window.scrollTo(0,0);
+    }).catch(function(err){
+      formError.textContent = 'não foi possível enviar agora (' + err.message + '). confira sua internet e tente de novo; o que você escreveu continua aqui.';
+      formError.hidden = false;
+    }).then(function(){
+      submitBtn.disabled = false; submitBtn.textContent = 'enviar testemunho';
+    });
+  });
+  document.getElementById('resetBtn').addEventListener('click', function(){
+    document.getElementById('nome').value=''; document.getElementById('dia').value=''; document.getElementById('resumo').value='';
+    fstate.team = null; fstate.types = [];
+    renderTeams(); renderTypes();
+    confirmView.hidden = true; formView.hidden = false;
+  });
+
+  // ---------- screen 2: panel ----------
+  var MONTHS_PT = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+  var PANEL_TEAMS = [
+    { key:'evangelismo', color:'#1B4FD8' },
+    { key:'fundação casa', color:'#1F6B4A' },
+    { key:'ações sociais', color:'#C8D92B' },
+    { key:'esportes', color:'#F26A1F' }
+  ];
+  var CROSS_TYPES = [
+    { key:'pessoa alcançada', color:'#F26A1F' },
+    { key:'salvação', color:'#E23B2E' },
+    { key:'reconciliação', color:'#C8D92B' },
+    { key:'cura', color:'#1B4FD8' },
+    { key:'outro', color:'#1F6B4A' }
+  ];
+
+  function last8Months(){
+    var now = new Date(); var months = [];
+    for (var i=7;i>=0;i--){
+      var dt = new Date(now.getFullYear(), now.getMonth()-i, 1);
+      months.push({ y: dt.getFullYear(), m: dt.getMonth()+1, label: MONTHS_PT[dt.getMonth()] });
+    }
+    return months;
+  }
+  function iso(y,m,d){ return y+'-'+String(m).padStart(2,'0')+'-'+String(d).padStart(2,'0'); }
+
+  // dados reais, carregados da planilha depois da senha
+  var rows = [];
+  function inWindow(r){
+    var first = last8Months()[0];
+    var p = parseIso(r.dia);
+    return (p.y > first.y) || (p.y === first.y && p.m >= first.m);
+  }
+
+  function parseIso(s){ var p = String(s).split('-').map(Number); return { y:p[0], m:p[1], d:p[2] }; }
+  function fmtShortDate(s){ var p = parseIso(s); return String(p.d).padStart(2,'0') + ' ' + MONTHS_PT[p.m-1]; }
+
+  function monthlySeries(predicate){
+    var months = last8Months();
+    return months.map(function(mo){
+      return rows.filter(function(r){
+        var p = parseIso(r.dia);
+        return p.y === mo.y && p.m === mo.m && predicate(r);
+      }).length;
+    });
+  }
+  function buildSeries(){
+    return [
+      { key:'testemunhos', label:'testemunhos', color:'#F26A1F', vals: monthlySeries(function(){return true;}) },
+      { key:'evangelismo', label:'evangelismo', color:'#1B4FD8', vals: monthlySeries(function(r){return r.time==='evangelismo';}) },
+      { key:'fundação casa', label:'fundação casa', color:'#1F6B4A', vals: monthlySeries(function(r){return r.time==='fundação casa';}) },
+      { key:'ações sociais', label:'ações sociais', color:'#C8D92B', vals: monthlySeries(function(r){return r.time==='ações sociais';}) },
+      { key:'esportes', label:'esportes', color:'#F26A1F', vals: monthlySeries(function(r){return r.time==='esportes';}) },
+      { key:'alcançadas', label:'alcançadas', color:'#141210', vals: monthlySeries(function(r){return r.tipos.indexOf('pessoa alcançada')>=0;}) },
+      { key:'salvação', label:'salvação', color:'#E23B2E', vals: monthlySeries(function(r){return r.tipos.indexOf('salvação')>=0;}) },
+      { key:'reconciliação', label:'reconciliação', color:'#C8D92B', vals: monthlySeries(function(r){return r.tipos.indexOf('reconciliação')>=0;}) },
+      { key:'cura', label:'cura', color:'#1B4FD8', vals: monthlySeries(function(r){return r.tipos.indexOf('cura')>=0;}) },
+      { key:'outros', label:'outros', color:'#1F6B4A', vals: monthlySeries(function(r){return r.tipos.indexOf('outro')>=0;}) }
+    ];
+  }
+
+  function renderStats(){
+    var total = rows.length;
+    var alcancadas = rows.filter(function(r){return r.tipos.indexOf('pessoa alcançada')>=0;}).length;
+    var salvacao = rows.filter(function(r){return r.tipos.indexOf('salvação')>=0;}).length;
+    var reconciliacao = rows.filter(function(r){return r.tipos.indexOf('reconciliação')>=0;}).length;
+    var cura = rows.filter(function(r){return r.tipos.indexOf('cura')>=0;}).length;
+    var outros = rows.filter(function(r){return r.tipos.indexOf('outro')>=0;}).length;
+
+    var statRow = document.getElementById('statRow');
+    statRow.innerHTML = '';
+    var tiles = [
+      { value: total, label:'testemunhos', meta:'total', bg:true, labelColor:'var(--orange)', metaColor:'var(--muted-45)', ink:'var(--ink)' },
+      { value: alcancadas, label:'alcançadas', meta:'pessoas', bg:true, labelColor:'var(--orange)', metaColor:'var(--muted-45)', ink:'var(--ink)' },
+      { value: salvacao, label:'salvação', meta:'registros', solid:'#F26A1F', shape:'arc', labelColor:'var(--ink)', metaColor:'rgba(20,18,16,.6)', ink:'var(--ink)' },
+      { value: reconciliacao, label:'reconciliação', meta:'registros', bg:true, labelColor:'var(--orange)', metaColor:'var(--muted-45)', ink:'var(--ink)' },
+      { value: cura, label:'cura', meta:'registros', bg:true, labelColor:'var(--orange)', metaColor:'var(--muted-45)', ink:'var(--ink)' },
+      { value: outros, label:'outros', meta:'registros', solid:'#1B4FD8', shape:'ring', labelColor:'var(--paper)', metaColor:'rgba(244,241,234,.7)', ink:'var(--paper)' }
+    ];
+    tiles.forEach(function(t){
+      var el = document.createElement('div');
+      el.className = 'stat-tile';
+      if (t.solid){ el.style.background = t.solid; }
+      else { el.style.background='rgba(255,255,255,.62)'; el.style.backdropFilter='blur(18px)'; el.style.border='1px solid var(--border)'; }
+      var shapeHtml = '';
+      if (t.shape==='arc') shapeHtml = '<div style="position:absolute;right:-26px;top:-26px;width:96px;height:48px;border-radius:0 0 96px 96px;background:rgba(20,18,16,.22)"></div>';
+      if (t.shape==='ring') shapeHtml = '<div style="position:absolute;right:-18px;bottom:-30px;width:80px;height:80px;border-radius:50%;border:14px solid rgba(244,241,234,.22)"></div>';
+      el.innerHTML = shapeHtml +
+        '<div class="value" style="position:relative;color:'+t.ink+'">'+t.value+'</div>' +
+        '<div class="label" style="position:relative;color:'+t.labelColor+'">'+t.label+'</div>' +
+        '<div class="meta" style="position:relative;color:'+t.metaColor+'">'+t.meta+'</div>';
+      statRow.appendChild(el);
+    });
+  }
+
+  function renderTeamBars(){
+    var counts = PANEL_TEAMS.map(function(t){ return rows.filter(function(r){return r.time===t.key;}).length; });
+    var max = Math.max(1, Math.max.apply(null, counts));
+    var wrap = document.getElementById('teamBars');
+    wrap.innerHTML = '';
+    PANEL_TEAMS.forEach(function(t,i){
+      var pct = Math.round((counts[i]/max)*100);
+      var row = document.createElement('div');
+      row.style.display='flex'; row.style.flexDirection='column'; row.style.gap='6px';
+      row.innerHTML = '<div style="display:flex;justify-content:space-between;font:400 12px Outfit,sans-serif;color:var(--muted-65)"><span>'+t.key+'</span><span style="color:var(--ink)">'+counts[i]+'</span></div>' +
+        '<div class="bar-track"><div style="width:'+pct+'%;height:12px;border-radius:999px;background:'+t.color+'"></div></div>';
+      wrap.appendChild(row);
+    });
+  }
+
+  function renderCrossBars(){
+    var wrap = document.getElementById('crossBars');
+    wrap.innerHTML = '';
+    PANEL_TEAMS.forEach(function(t){
+      var teamRows = rows.filter(function(r){return r.time===t.key;});
+      var total = teamRows.length;
+      var row = document.createElement('div');
+      row.style.display='flex'; row.style.flexDirection='column'; row.style.gap='6px';
+      var segs = CROSS_TYPES.map(function(ty){
+        var count = teamRows.filter(function(r){return r.tipos.indexOf(ty.key)>=0;}).length;
+        var pct = total ? (count/total)*100 : 0;
+        return '<div style="width:'+pct+'%;background:'+ty.color+'"></div>';
+      }).join('');
+      row.innerHTML = '<div style="font:400 12px Outfit,sans-serif;color:var(--muted-65)">'+t.key+'</div><div class="bar-track">'+segs+'</div>';
+      wrap.appendChild(row);
+    });
+  }
+
+  var chartSerie = 'testemunhos';
+  function renderChart(){
+    var months = last8Months();
+    var series = buildSeries();
+    var cur = series.filter(function(s){return s.key===chartSerie;})[0] || series[0];
+    var vals = cur.vals;
+    var max = Math.max(1, Math.max.apply(null, vals));
+    var top=16, bottom=152, W=600;
+    var pts = vals.map(function(v,i){
+      var x = 10 + (i*W)/(vals.length-1);
+      var y = bottom - (v/max)*(bottom-top);
+      return { x: Math.round(x*10)/10, y: Math.round(y*10)/10 };
+    });
+    document.getElementById('serieMeta').textContent = 'série exibida: ' + cur.label;
+    document.getElementById('serieLast').textContent = String(vals[vals.length-1]);
+    document.getElementById('serieLastLabel').textContent = 'em ' + months[months.length-1].label;
+    document.getElementById('serieMax').textContent = String(max);
+    document.getElementById('chartMonths').innerHTML = months.map(function(m){return '<span>'+m.label+'</span>';}).join('');
+    var line = document.getElementById('chartLine');
+    var dot = document.getElementById('chartDot');
+    line.setAttribute('points', pts.map(function(p){return p.x+','+p.y;}).join(' '));
+    line.setAttribute('stroke', cur.color);
+    dot.setAttribute('cx', pts[pts.length-1].x);
+    dot.setAttribute('cy', pts[pts.length-1].y);
+    dot.setAttribute('fill', cur.color);
+
+    var chipsWrap = document.getElementById('serieChips');
+    chipsWrap.innerHTML = '';
+    series.forEach(function(s){
+      var on = s.key === chartSerie;
+      var chip = document.createElement('div');
+      chip.className = 'chip-btn';
+      chip.textContent = s.label;
+      if (on){ chip.style.background=s.color; chip.style.borderColor=s.color; chip.style.color = s.color==='#C8D92B' ? '#141210' : '#F4F1EA'; }
+      chip.addEventListener('click', function(){ chartSerie = s.key; renderChart(); });
+      chipsWrap.appendChild(chip);
+    });
+  }
+
+  var listExpanded = false;
+  function renderList(){
+    var sorted = rows.slice().sort(function(a,b){ return a.dia < b.dia ? 1 : -1; });
+    document.getElementById('listCount').textContent = rows.length + (rows.length === 1 ? ' registro' : ' registros');
+    var toggle = document.getElementById('listToggle');
+    toggle.hidden = rows.length <= 3;
+    if (!rows.length){
+      document.getElementById('listItems').innerHTML = '<div style="font:400 13px/1.5 Outfit,sans-serif;color:var(--muted-65)">nenhum testemunho nos últimos 8 meses. assim que alguém enviar pelo formulário, ele aparece aqui.</div>';
+      return;
+    }
+    toggle.textContent = listExpanded ? 'ver menos' : 'ver todos';
+    toggle.onclick = function(){ listExpanded = !listExpanded; renderList(); };
+    var visible = listExpanded ? sorted : sorted.slice(0,3);
+    var wrap = document.getElementById('listItems');
+    wrap.innerHTML = '';
+    var teamColor = function(key){ var t = PANEL_TEAMS.filter(function(t){return t.key===key;})[0]; return t ? t.color : '#141210'; };
+    visible.forEach(function(r){
+      var chips = r.tipos.map(function(tp){
+        return '<span style="font:400 10px Outfit,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#141210;background:rgba(20,18,16,.07);border-radius:999px;padding:4px 9px">'+esc(tp)+'</span>';
+      }).join('');
+      var item = document.createElement('div');
+      item.style.borderTop='1px solid rgba(20,18,16,.1)'; item.style.paddingTop='12px';
+      item.style.display='flex'; item.style.flexDirection='column'; item.style.gap='7px';
+      item.innerHTML = '<div style="display:flex;align-items:center;gap:10px"><span style="width:8px;height:8px;border-radius:50%;background:'+teamColor(r.time)+'"></span><span style="flex:1;font:400 14px Outfit,sans-serif;color:#141210">'+esc(r.nome)+'</span><span style="font:400 10px Outfit,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--muted-45)">'+fmtShortDate(r.dia)+' · '+esc(r.time)+'</span></div>' +
+        (r.resumo ? '<div style="font:400 13px/1.5 Outfit,sans-serif;color:var(--muted-70)">'+esc(r.resumo)+'</div>' : '') +
+        (chips ? '<div style="display:flex;flex-wrap:wrap;gap:6px">'+chips+'</div>' : '');
+      wrap.appendChild(item);
+    });
+  }
+
+  function renderAll(){ renderStats(); renderTeamBars(); renderCrossBars(); renderChart(); renderList(); }
+
+  var gateView = document.getElementById('gateView');
+  var dashView = document.getElementById('dashView');
+  var gateForm = document.getElementById('gateForm');
+  var gateError = document.getElementById('gateError');
+  gateForm.addEventListener('submit', function(ev){
+    ev.preventDefault();
+    var pw = document.getElementById('pw').value;
+    var gateBtn = document.getElementById('gateBtn');
+    gateError.hidden = true;
+    if (!pw){ gateError.textContent = 'digite a senha do time.'; gateError.hidden = false; return; }
+    if (!apiReady()){ gateError.textContent = 'o painel ainda não está conectado à planilha.'; gateError.hidden = false; return; }
+    gateBtn.disabled = true; gateBtn.textContent = 'entrando...';
+    api({ action: 'listar', senha: pw }).then(function(res){
+      if (!res || !res.ok){
+        gateError.textContent = (res && res.erro === 'senha') ? 'senha inválida.' : 'não foi possível carregar o painel (' + ((res && res.erro) || 'erro') + ').';
+        gateError.hidden = false;
+        return;
+      }
+      rows = (res.linhas || []).filter(function(r){ return /^\d{4}-\d{2}-\d{2}$/.test(r.dia); }).filter(inWindow);
+      gateView.hidden = true;
+      dashView.hidden = false;
+      renderAll();
+    }).catch(function(err){
+      gateError.textContent = 'não foi possível conectar (' + err.message + '). confira sua internet e tente de novo.';
+      gateError.hidden = false;
+    }).then(function(){
+      gateBtn.disabled = false; gateBtn.textContent = 'entrar';
+    });
+  });
+})();
+</script>
+
+</body></html>
