@@ -98,6 +98,25 @@ body{margin:0;background:var(--paper-2);font-family:Outfit,system-ui,sans-serif;
 .list-scroll::-webkit-scrollbar{width:6px}
 .list-scroll::-webkit-scrollbar-thumb{background:rgba(20,18,16,.18);border-radius:999px}
 .list-end{font:400 10px Outfit,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--muted-45);text-align:center;padding:6px 0 2px}
+.open-btn{flex:none;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:999px;border:1px solid var(--border-strong);background:rgba(255,255,255,.7);color:var(--ink);cursor:pointer;padding:0}
+.open-btn:hover{background:var(--orange);border-color:var(--orange)}
+.open-btn:focus-visible,.modal-btn:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.modal-back{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(20,18,16,.5);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);animation:fadeIn .18s ease}
+.modal{position:relative;width:100%;max-width:560px;max-height:min(720px,calc(100vh - 40px));display:flex;flex-direction:column;background:var(--paper);border-radius:28px;box-shadow:0 30px 80px rgba(20,18,16,.3);overflow:hidden;animation:popIn .22s cubic-bezier(.2,.8,.2,1)}
+.modal-head{padding:26px 26px 18px;display:flex;flex-direction:column;gap:10px;border-bottom:1px solid rgba(20,18,16,.1)}
+.modal-eyebrow{display:flex;align-items:center;gap:8px;font:400 10px Outfit,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--muted-55);padding-right:44px}
+.modal-name{font-family:'Playfair Display',Georgia,serif;font-style:italic;font-weight:800;font-size:clamp(28px,6vw,38px);line-height:1;letter-spacing:-.01em;color:var(--ink);overflow-wrap:anywhere}
+.modal-body{padding:22px 26px 26px;overflow-y:auto;overscroll-behavior:contain;font:400 17px/1.7 Outfit,sans-serif;color:var(--ink);white-space:pre-wrap;overflow-wrap:anywhere}
+.modal-body.vazio{color:var(--muted-55);font-style:italic}
+.modal-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 18px;border-top:1px solid rgba(20,18,16,.1);background:rgba(20,18,16,.03)}
+.modal-btn{height:38px;padding:0 16px;border-radius:12px;border:1px solid var(--border-strong);background:rgba(255,255,255,.8);color:var(--ink);font:400 13px Outfit,sans-serif;cursor:pointer}
+.modal-btn:disabled{opacity:.35;cursor:default}
+.modal-count{font:400 10px Outfit,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--muted-55)}
+.modal-close{position:absolute;top:18px;right:18px;width:36px;height:36px;border-radius:999px;border:0;background:var(--ink);color:var(--paper);font:400 20px/1 Outfit,sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center}
+body.modal-open{overflow:hidden}
+@keyframes fadeIn{from{opacity:0}}
+@keyframes popIn{from{opacity:0;transform:translateY(12px) scale(.98)}}
+@media (prefers-reduced-motion:reduce){.modal-back,.modal{animation:none}}
 </style>
 
 <div class="wrap">
@@ -267,6 +286,22 @@ body{margin:0;background:var(--paper-2);font-family:Outfit,system-ui,sans-serif;
   </div>
 </div>
 
+<div id="modalBack" class="modal-back" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalName">
+    <button id="modalClose" class="modal-close modal-btn" type="button" aria-label="fechar">×</button>
+    <div class="modal-head">
+      <div class="modal-eyebrow"><span id="modalDot" style="width:8px;height:8px;border-radius:50%;flex:none"></span><span id="modalMeta"></span></div>
+      <div id="modalName" class="modal-name"></div>
+      <div id="modalChips" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px"></div>
+    </div>
+    <div id="modalBody" class="modal-body"></div>
+    <div class="modal-foot">
+      <button id="modalPrev" class="modal-btn" type="button">‹ anterior</button>
+      <span id="modalCount" class="modal-count"></span>
+      <button id="modalNext" class="modal-btn" type="button">próximo ›</button>
+    </div>
+  </div>
+</div>
 <script>
 (function(){
   // ---------- configuração ----------
@@ -653,7 +688,8 @@ body{margin:0;background:var(--paper-2);font-family:Outfit,system-ui,sans-serif;
     }).join('');
     var item = document.createElement('div');
     item.className = 'list-item';
-    item.innerHTML = '<div style="display:flex;align-items:center;gap:10px"><span style="width:8px;height:8px;flex:none;border-radius:50%;background:'+teamColor(r.time)+'"></span><span style="flex:1;font:400 14px Outfit,sans-serif;color:#141210">'+esc(r.nome)+'</span><span style="font:400 10px Outfit,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--muted-45)">'+fmtShortDate(r.dia)+' · '+esc(r.time)+'</span></div>' +
+    item.innerHTML = '<div style="display:flex;align-items:center;gap:10px"><span style="width:8px;height:8px;flex:none;border-radius:50%;background:'+teamColor(r.time)+'"></span><span style="flex:1;font:400 14px Outfit,sans-serif;color:#141210">'+esc(r.nome)+'</span><span style="font:400 10px Outfit,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--muted-45)">'+fmtShortDate(r.dia)+' · '+esc(r.time)+'</span>' +
+      '<button type="button" class="open-btn" aria-label="abrir testemunho de '+esc(r.nome)+'" title="abrir"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 1h4v4M11 1L6.5 5.5M5 11H1V7M1 11l4.5-4.5"/></svg></button></div>' +
       (r.resumo ? '<div class="resumo clamp">'+esc(r.resumo)+'</div>' : '') +
       (chips ? '<div style="display:flex;flex-wrap:wrap;gap:6px">'+chips+'</div>' : '');
     return item;
@@ -685,12 +721,79 @@ body{margin:0;background:var(--paper-2);font-family:Outfit,system-ui,sans-serif;
   window.addEventListener('resize', function(){ if (!dashView.hidden) fitListHeight(); });
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(function(){ if (!dashView.hidden) fitListHeight(); });
 
+  // ---------- pop-up de leitura ----------
+  var modalBack = document.getElementById('modalBack');
+  var modalIdx = 0, modalReturnFocus = null;
+  function fmtLongDate(s){ var p = parseIso(s); return p.d + ' de ' + MONTHS_LONG[p.m-1] + ' de ' + p.y; }
+  function showModalItem(){
+    var r = listSorted[modalIdx];
+    document.getElementById('modalDot').style.background = teamColor(r.time);
+    document.getElementById('modalMeta').textContent = r.time + ' · ' + fmtLongDate(r.dia);
+    document.getElementById('modalName').textContent = r.nome;
+    document.getElementById('modalChips').innerHTML = r.tipos.map(function(tp){
+      return '<span style="font:400 10px Outfit,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#141210;background:rgba(20,18,16,.07);border-radius:999px;padding:5px 10px">'+esc(tp)+'</span>';
+    }).join('');
+    var body = document.getElementById('modalBody');
+    body.textContent = r.resumo || 'sem resumo escrito.';
+    body.classList.toggle('vazio', !r.resumo);
+    body.scrollTop = 0;
+    document.getElementById('modalCount').textContent = (modalIdx+1) + ' de ' + listSorted.length;
+    document.getElementById('modalPrev').disabled = modalIdx === 0;
+    document.getElementById('modalNext').disabled = modalIdx === listSorted.length - 1;
+  }
+  function openModal(i, from){
+    if (i < 0) return;
+    modalIdx = i; modalReturnFocus = from || null;
+    showModalItem();
+    modalBack.hidden = false;
+    document.body.classList.add('modal-open');
+    document.getElementById('modalClose').focus();
+  }
+  function closeModal(){
+    modalBack.hidden = true;
+    document.body.classList.remove('modal-open');
+    if (modalReturnFocus && document.contains(modalReturnFocus)) modalReturnFocus.focus();
+  }
+  function stepModal(d){
+    var n = modalIdx + d;
+    if (n < 0 || n >= listSorted.length) return;
+    modalIdx = n; showModalItem();
+  }
+  document.getElementById('modalClose').addEventListener('click', closeModal);
+  document.getElementById('modalPrev').addEventListener('click', function(){ stepModal(-1); });
+  document.getElementById('modalNext').addEventListener('click', function(){ stepModal(1); });
+  modalBack.addEventListener('click', function(ev){ if (ev.target === modalBack) closeModal(); });
+  document.addEventListener('keydown', function(ev){
+    if (modalBack.hidden) return;
+    if (ev.key === 'Escape') closeModal();
+    else if (ev.key === 'ArrowLeft') stepModal(-1);
+    else if (ev.key === 'ArrowRight') stepModal(1);
+    else if (ev.key === 'Tab'){
+      var f = [].slice.call(modalBack.querySelectorAll('button:not([disabled])'));
+      var first = f[0], last = f[f.length-1];
+      if (ev.shiftKey && document.activeElement === first){ ev.preventDefault(); last.focus(); }
+      else if (!ev.shiftKey && document.activeElement === last){ ev.preventDefault(); first.focus(); }
+    }
+  });
+  // no celular: deslizar para os lados troca de testemunho
+  (function(){
+    var x0 = null, y0 = null;
+    modalBack.addEventListener('touchstart', function(e){ x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; }, { passive:true });
+    modalBack.addEventListener('touchend', function(e){
+      if (x0 === null) return;
+      var dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0;
+      if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) stepModal(dx < 0 ? 1 : -1);
+      x0 = null;
+    }, { passive:true });
+  })();
+
   function appendBatch(){
     var wrap = document.getElementById('listItems');
     var old = document.getElementById('listSentinel'); if (old) old.remove();
     var next = listSorted.slice(listShown, listShown + LIST_BATCH);
     next.forEach(function(r){
       var el = listItemEl(r);
+      el.querySelector('.open-btn').addEventListener('click', function(ev){ openModal(listSorted.indexOf(r), ev.currentTarget); });
       wrap.appendChild(el);
       addReadMore(el);
     });
