@@ -90,6 +90,11 @@ body{margin:0;background:var(--paper-2);font-family:Outfit,system-ui,sans-serif;
 .filter-select:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 .filter-clear{height:36px;padding:0 6px;border:0;background:none;color:var(--muted-65);font:400 12px Outfit,sans-serif;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
 @media (pointer:coarse){.filter-select{font-size:16px}}
+.list-scroll{display:flex;flex-direction:column;gap:10px;max-height:min(560px,70vh);overflow-y:auto;overscroll-behavior:contain;margin-right:-10px;padding-right:10px;
+  -webkit-mask-image:linear-gradient(to bottom,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(to bottom,#000 calc(100% - 28px),transparent);padding-bottom:24px}
+.list-scroll::-webkit-scrollbar{width:6px}
+.list-scroll::-webkit-scrollbar-thumb{background:rgba(20,18,16,.18);border-radius:999px}
+.list-end{font:400 10px Outfit,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--muted-45);text-align:center;padding:6px 0 2px}
 </style>
 
 <div class="wrap">
@@ -250,9 +255,8 @@ body{margin:0;background:var(--paper-2);font-family:Outfit,system-ui,sans-serif;
                 <div style="font:500 16px/1 Outfit,sans-serif">testemunhos completos</div>
                 <div id="listCount" style="font:400 10px/1 Outfit,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--muted-45)"></div>
               </div>
-              <div id="listToggle" style="height:32px;display:flex;align-items:center;padding:0 14px;border-radius:10px;background:var(--orange);color:var(--ink);font:400 12px Outfit,sans-serif;cursor:pointer">ver todos</div>
             </div>
-            <div id="listItems" style="display:flex;flex-direction:column;gap:10px"></div>
+            <div id="listItems" class="list-scroll"></div>
           </div>
         </div>
       </div>
@@ -481,7 +485,6 @@ body{margin:0;background:var(--paper-2);font-family:Outfit,system-ui,sans-serif;
       if (wk && (r.dia < wk[0] || r.dia > wk[1])) return false;
       return true;
     });
-    listExpanded = false;
     renderAll();
   }
   function hasFilters(){ return !!(filt.mes || filt.semana || filt.time); }
@@ -636,34 +639,62 @@ body{margin:0;background:var(--paper-2);font-family:Outfit,system-ui,sans-serif;
     });
   }
 
-  var listExpanded = false;
+  // lista com scroll infinito: desenha em lotes de 10 conforme a pessoa rola
+  var LIST_BATCH = 10;
+  var listSorted = [], listShown = 0, listObserver = null;
+  var teamColor = function(key){ var t = PANEL_TEAMS.filter(function(t){return t.key===key;})[0]; return t ? t.color : '#141210'; };
+
+  function listItemEl(r){
+    var chips = r.tipos.map(function(tp){
+      return '<span style="font:400 10px Outfit,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#141210;background:rgba(20,18,16,.07);border-radius:999px;padding:4px 9px">'+esc(tp)+'</span>';
+    }).join('');
+    var item = document.createElement('div');
+    item.style.borderTop='1px solid rgba(20,18,16,.1)'; item.style.paddingTop='12px';
+    item.style.display='flex'; item.style.flexDirection='column'; item.style.gap='7px';
+    item.innerHTML = '<div style="display:flex;align-items:center;gap:10px"><span style="width:8px;height:8px;flex:none;border-radius:50%;background:'+teamColor(r.time)+'"></span><span style="flex:1;font:400 14px Outfit,sans-serif;color:#141210">'+esc(r.nome)+'</span><span style="font:400 10px Outfit,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--muted-45)">'+fmtShortDate(r.dia)+' · '+esc(r.time)+'</span></div>' +
+      (r.resumo ? '<div style="font:400 13px/1.5 Outfit,sans-serif;color:var(--muted-70);white-space:pre-wrap;overflow-wrap:anywhere">'+esc(r.resumo)+'</div>' : '') +
+      (chips ? '<div style="display:flex;flex-wrap:wrap;gap:6px">'+chips+'</div>' : '');
+    return item;
+  }
+
+  function appendBatch(){
+    var wrap = document.getElementById('listItems');
+    var old = document.getElementById('listSentinel'); if (old) old.remove();
+    var next = listSorted.slice(listShown, listShown + LIST_BATCH);
+    next.forEach(function(r){ wrap.appendChild(listItemEl(r)); });
+    listShown += next.length;
+    if (listShown < listSorted.length){
+      var sentinel = document.createElement('div');
+      sentinel.id = 'listSentinel'; sentinel.style.minHeight = '1px';
+      wrap.appendChild(sentinel);
+      if (listObserver) listObserver.observe(sentinel);
+      else appendBatch(); // navegador sem suporte: mostra tudo
+    } else if (listSorted.length > LIST_BATCH){
+      var endEl = document.createElement('div');
+      endEl.className = 'list-end';
+      endEl.textContent = 'fim · ' + listSorted.length + ' testemunhos';
+      wrap.appendChild(endEl);
+    }
+  }
+
   function renderList(){
-    var sorted = rows.slice().sort(function(a,b){ return a.dia < b.dia ? 1 : -1; });
+    var wrap = document.getElementById('listItems');
+    listSorted = rows.slice().sort(function(a,b){ return a.dia < b.dia ? 1 : -1; });
+    listShown = 0;
     document.getElementById('listCount').textContent = rows.length + (rows.length === 1 ? ' registro' : ' registros');
-    var toggle = document.getElementById('listToggle');
-    toggle.hidden = rows.length <= 3;
+    if (listObserver) listObserver.disconnect();
+    if (!listObserver && 'IntersectionObserver' in window){
+      listObserver = new IntersectionObserver(function(entries){
+        if (entries.some(function(e){ return e.isIntersecting; })) appendBatch();
+      }, { root: wrap, rootMargin: '0px 0px 240px 0px' });
+    }
+    wrap.innerHTML = '';
+    wrap.scrollTop = 0;
     if (!rows.length){
-      document.getElementById('listItems').innerHTML = '<div style="font:400 13px/1.5 Outfit,sans-serif;color:var(--muted-65)">' + (hasFilters() ? 'nenhum testemunho com esses filtros.' : 'nenhum testemunho nos últimos 8 meses. assim que alguém enviar pelo formulário, ele aparece aqui.') + '</div>';
+      wrap.innerHTML = '<div style="font:400 13px/1.5 Outfit,sans-serif;color:var(--muted-65)">' + (hasFilters() ? 'nenhum testemunho com esses filtros.' : 'nenhum testemunho nos últimos 8 meses. assim que alguém enviar pelo formulário, ele aparece aqui.') + '</div>';
       return;
     }
-    toggle.textContent = listExpanded ? 'ver menos' : 'ver todos';
-    toggle.onclick = function(){ listExpanded = !listExpanded; renderList(); };
-    var visible = listExpanded ? sorted : sorted.slice(0,3);
-    var wrap = document.getElementById('listItems');
-    wrap.innerHTML = '';
-    var teamColor = function(key){ var t = PANEL_TEAMS.filter(function(t){return t.key===key;})[0]; return t ? t.color : '#141210'; };
-    visible.forEach(function(r){
-      var chips = r.tipos.map(function(tp){
-        return '<span style="font:400 10px Outfit,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#141210;background:rgba(20,18,16,.07);border-radius:999px;padding:4px 9px">'+esc(tp)+'</span>';
-      }).join('');
-      var item = document.createElement('div');
-      item.style.borderTop='1px solid rgba(20,18,16,.1)'; item.style.paddingTop='12px';
-      item.style.display='flex'; item.style.flexDirection='column'; item.style.gap='7px';
-      item.innerHTML = '<div style="display:flex;align-items:center;gap:10px"><span style="width:8px;height:8px;border-radius:50%;background:'+teamColor(r.time)+'"></span><span style="flex:1;font:400 14px Outfit,sans-serif;color:#141210">'+esc(r.nome)+'</span><span style="font:400 10px Outfit,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--muted-45)">'+fmtShortDate(r.dia)+' · '+esc(r.time)+'</span></div>' +
-        (r.resumo ? '<div style="font:400 13px/1.5 Outfit,sans-serif;color:var(--muted-70)">'+esc(r.resumo)+'</div>' : '') +
-        (chips ? '<div style="display:flex;flex-wrap:wrap;gap:6px">'+chips+'</div>' : '');
-      wrap.appendChild(item);
-    });
+    appendBatch();
   }
 
   function renderAll(){ renderStats(); renderTeamBars(); renderCrossBars(); renderChart(); renderList(); }
