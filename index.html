@@ -82,6 +82,14 @@ body{margin:0;background:var(--paper-2);font-family:Outfit,system-ui,sans-serif;
 .stat-row{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
 @media (min-width:620px) and (max-width:899px){.stat-row{grid-template-columns:repeat(3,1fr)}}
 @media (min-width:900px){.stat-row{grid-template-columns:repeat(6,1fr)}}
+.filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.filter-select{height:36px;max-width:100%;padding:0 32px 0 14px;border-radius:12px;border:1px solid var(--border);color:var(--ink);font:400 12px Outfit,sans-serif;cursor:pointer;-webkit-appearance:none;appearance:none;
+  background:rgba(255,255,255,.7) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23141210' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 13px center}
+.filter-select.on{background-color:var(--orange);border-color:var(--orange)}
+.filter-select:disabled{opacity:.45;cursor:default}
+.filter-select:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.filter-clear{height:36px;padding:0 6px;border:0;background:none;color:var(--muted-65);font:400 12px Outfit,sans-serif;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+@media (pointer:coarse){.filter-select{font-size:16px}}
 </style>
 
 <div class="wrap">
@@ -175,9 +183,11 @@ body{margin:0;background:var(--paper-2);font-family:Outfit,system-ui,sans-serif;
             </div>
             <div class="subline" style="margin-top:4px">zion church · painel do time</div>
           </div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <div style="height:36px;display:flex;align-items:center;padding:0 16px;border-radius:12px;background:rgba(255,255,255,.7);border:1px solid var(--border);font:400 12px Outfit,sans-serif">últimos 8 meses</div>
-            <div style="height:36px;display:flex;align-items:center;padding:0 16px;border-radius:12px;background:rgba(255,255,255,.7);border:1px solid var(--border);font:400 12px Outfit,sans-serif">todos os times</div>
+          <div class="filters">
+            <select id="fMes" class="filter-select" aria-label="filtrar por mês"></select>
+            <select id="fSemana" class="filter-select" aria-label="filtrar por semana"></select>
+            <select id="fTime" class="filter-select" aria-label="filtrar por time"></select>
+            <button id="fLimpar" type="button" class="filter-clear" hidden>limpar filtros</button>
           </div>
         </div>
 
@@ -417,7 +427,76 @@ body{margin:0;background:var(--paper-2);font-family:Outfit,system-ui,sans-serif;
   function iso(y,m,d){ return y+'-'+String(m).padStart(2,'0')+'-'+String(d).padStart(2,'0'); }
 
   // dados reais, carregados da planilha depois da senha
-  var rows = [];
+  var allRows = [];   // tudo dos últimos 8 meses
+  var rows = [];      // o que passa pelos filtros (cards, barras e lista)
+  var chartRows = []; // o gráfico mês a mês respeita só o filtro de time
+  var filt = { mes:'', semana:'', time:'' };
+  var MONTHS_LONG = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+
+  function isoD(d){ return iso(d.getFullYear(), d.getMonth()+1, d.getDate()); }
+  function addDays(d,n){ var x = new Date(d.getFullYear(), d.getMonth(), d.getDate()); x.setDate(x.getDate()+n); return x; }
+  function mondayOf(d){ var x = new Date(d.getFullYear(), d.getMonth(), d.getDate()); return addDays(x, -((x.getDay()+6)%7)); }
+  function fmtRange(a,b){
+    var da = String(a.getDate()).padStart(2,'0'), db = String(b.getDate()).padStart(2,'0');
+    return a.getMonth() === b.getMonth()
+      ? da + '–' + db + ' ' + MONTHS_PT[b.getMonth()]
+      : da + ' ' + MONTHS_PT[a.getMonth()] + ' – ' + db + ' ' + MONTHS_PT[b.getMonth()];
+  }
+  // semanas de segunda a domingo: as do mês escolhido, ou as 8 mais recentes
+  function weekList(){
+    var out = [];
+    if (filt.mes){
+      var p = filt.mes.split('-').map(Number);
+      var last = new Date(p[0], p[1], 0);
+      for (var w = mondayOf(new Date(p[0], p[1]-1, 1)); w <= last; w = addDays(w,7)) out.push(w);
+    } else {
+      var cur = mondayOf(new Date());
+      for (var i=0;i<8;i++) out.push(addDays(cur, -7*i));
+    }
+    return out.map(function(w){ var e = addDays(w,6); return { value: isoD(w)+'|'+isoD(e), label: fmtRange(w,e) }; });
+  }
+  function fillSelect(sel, opts, value){
+    sel.innerHTML = opts.map(function(o){ return '<option value="'+esc(o.value)+'">'+esc(o.label)+'</option>'; }).join('');
+    sel.value = opts.some(function(o){ return o.value === value; }) ? value : '';
+    sel.classList.toggle('on', !!sel.value);
+    return sel.value;
+  }
+  function buildFilters(){
+    var thisYear = new Date().getFullYear();
+    var mesOpts = [{ value:'', label:'últimos 8 meses' }].concat(last8Months().reverse().map(function(m){
+      return { value: m.y+'-'+String(m.m).padStart(2,'0'), label: MONTHS_LONG[m.m-1] + (m.y !== thisYear ? ' ' + m.y : '') };
+    }));
+    filt.mes = fillSelect(document.getElementById('fMes'), mesOpts, filt.mes);
+    var semOpts = [{ value:'', label: filt.mes ? 'todas as semanas' : 'qualquer semana' }].concat(weekList());
+    filt.semana = fillSelect(document.getElementById('fSemana'), semOpts, filt.semana);
+    var timeOpts = [{ value:'', label:'todos os times' }].concat(PANEL_TEAMS.map(function(t){ return { value:t.key, label:t.key }; }));
+    filt.time = fillSelect(document.getElementById('fTime'), timeOpts, filt.time);
+    document.getElementById('fLimpar').hidden = !(filt.mes || filt.semana || filt.time);
+  }
+  function applyFilters(){
+    var wk = filt.semana ? filt.semana.split('|') : null;
+    chartRows = allRows.filter(function(r){ return !filt.time || r.time === filt.time; });
+    rows = chartRows.filter(function(r){
+      if (filt.mes && r.dia.slice(0,7) !== filt.mes) return false;
+      if (wk && (r.dia < wk[0] || r.dia > wk[1])) return false;
+      return true;
+    });
+    listExpanded = false;
+    renderAll();
+  }
+  function hasFilters(){ return !!(filt.mes || filt.semana || filt.time); }
+  ['fMes','fSemana','fTime'].forEach(function(id){
+    document.getElementById(id).addEventListener('change', function(ev){
+      if (id === 'fMes'){ filt.mes = ev.target.value; filt.semana = ''; }
+      if (id === 'fSemana') filt.semana = ev.target.value;
+      if (id === 'fTime') filt.time = ev.target.value;
+      buildFilters(); applyFilters();
+    });
+  });
+  document.getElementById('fLimpar').addEventListener('click', function(){
+    filt = { mes:'', semana:'', time:'' };
+    buildFilters(); applyFilters();
+  });
   function inWindow(r){
     var first = last8Months()[0];
     var p = parseIso(r.dia);
@@ -430,7 +509,7 @@ body{margin:0;background:var(--paper-2);font-family:Outfit,system-ui,sans-serif;
   function monthlySeries(predicate){
     var months = last8Months();
     return months.map(function(mo){
-      return rows.filter(function(r){
+      return chartRows.filter(function(r){
         var p = parseIso(r.dia);
         return p.y === mo.y && p.m === mo.m && predicate(r);
       }).length;
@@ -531,7 +610,7 @@ body{margin:0;background:var(--paper-2);font-family:Outfit,system-ui,sans-serif;
       var y = bottom - (v/max)*(bottom-top);
       return { x: Math.round(x*10)/10, y: Math.round(y*10)/10 };
     });
-    document.getElementById('serieMeta').textContent = 'série exibida: ' + cur.label;
+    document.getElementById('serieMeta').textContent = 'série exibida: ' + cur.label + (filt.time ? ' · só ' + filt.time : '');
     document.getElementById('serieLast').textContent = String(vals[vals.length-1]);
     document.getElementById('serieLastLabel').textContent = 'em ' + months[months.length-1].label;
     document.getElementById('serieMax').textContent = String(max);
@@ -564,7 +643,7 @@ body{margin:0;background:var(--paper-2);font-family:Outfit,system-ui,sans-serif;
     var toggle = document.getElementById('listToggle');
     toggle.hidden = rows.length <= 3;
     if (!rows.length){
-      document.getElementById('listItems').innerHTML = '<div style="font:400 13px/1.5 Outfit,sans-serif;color:var(--muted-65)">nenhum testemunho nos últimos 8 meses. assim que alguém enviar pelo formulário, ele aparece aqui.</div>';
+      document.getElementById('listItems').innerHTML = '<div style="font:400 13px/1.5 Outfit,sans-serif;color:var(--muted-65)">' + (hasFilters() ? 'nenhum testemunho com esses filtros.' : 'nenhum testemunho nos últimos 8 meses. assim que alguém enviar pelo formulário, ele aparece aqui.') + '</div>';
       return;
     }
     toggle.textContent = listExpanded ? 'ver menos' : 'ver todos';
@@ -607,10 +686,11 @@ body{margin:0;background:var(--paper-2);font-family:Outfit,system-ui,sans-serif;
         gateError.hidden = false;
         return;
       }
-      rows = (res.linhas || []).filter(function(r){ return /^\d{4}-\d{2}-\d{2}$/.test(r.dia); }).filter(inWindow);
+      allRows = (res.linhas || []).filter(function(r){ return /^\d{4}-\d{2}-\d{2}$/.test(r.dia); }).filter(inWindow);
       gateView.hidden = true;
       dashView.hidden = false;
-      renderAll();
+      buildFilters();
+      applyFilters();
     }).catch(function(err){
       gateError.textContent = 'não foi possível conectar (' + err.message + '). confira sua internet e tente de novo.';
       gateError.hidden = false;
